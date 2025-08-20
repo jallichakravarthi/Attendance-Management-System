@@ -8,6 +8,12 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+face_attendance/.env
+face_attendance/__pycache__
+face_attendance/known_faces
+face_attendance/static
+face_attendance/uploads
+
 
 # Build output
 dist/
