@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Face Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #f5f7fa;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 6px 32px rgba(60,60,60,0.14);
+      padding: 2.5rem;
+      min-width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      margin-bottom: 1.2rem;
+      color: #222;
+      font-weight: 700;
+    }
+    #video, #capturedImg {
+      width: 350px;
+      height: 260px;
+      border-radius: 16px;
+      background: #222;
+      object-fit: cover;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+    #canvas { display: none; }
+    #submitBtn {
+      background: #2ecc40;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 2.2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      cursor: pointer;
+    }
+    .success-message {
+      color: #207a2c;
+      background: #eafbe7;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0.8rem 1.5rem;
+      margin-bottom: 1.2rem;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card" id="registerCard">
+    <h2>Register Your Face</h2>
+
+    <video id="video" autoplay playsinline></video>
+    <img id="capturedImg" style="display:none" alt="Captured face" />
+    <canvas id="canvas"></canvas>
+
+    <form id="faceForm" method="POST" enctype="multipart/form-data">
+      <!-- ✅ regNo instead of email -->
+      <input type="hidden" name="regNo" value="{{ regNo }}" />
+      <input type="hidden" name="token" value="{{ token }}" />
+      <input type="file" id="imgInput" name="image" style="display:none" />
+      <button id="submitBtn" type="button">Capture & Submit</button>
+    </form>
+
+    <div class="success-message" id="successMsg">Registered Successfully!</div>
+    <div id="errorMsg" style="display:none;"></div>
+
+    <button id="retryBtn" type="button"
+      style="display:none; margin-top:0.5rem; background:#fff; color:#e53935;
+             border:1.5px solid #e53935; border-radius:10px;
+             padding:0.7rem 2rem; font-size:1rem; font-weight:600;">
+      Retry
+    </button>
+  </div>
+
+<script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const submitBtn = document.getElementById('submitBtn');
+  const capturedImg = document.getElementById('capturedImg');
+  const successMsg = document.getElementById('successMsg');
+  const errorMsg = document.getElementById('errorMsg');
+  const retryBtn = document.getElementById('retryBtn');
+  const form = document.getElementById('faceForm');
+
+  let stream = null;
+
+  navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+    stream = s;
+    video.srcObject = stream;
+  });
+
+  submitBtn.onclick = () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+
+    video.style.display = 'none';
+    capturedImg.src = canvas.toDataURL('image/jpeg');
+    capturedImg.style.display = 'block';
+
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'face.jpg');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('imgInput').files = dt.files;
+
+      fetch('/submit-face', {
+        method: 'POST',
+        body: new FormData(form)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          successMsg.style.display = 'block';
+          errorMsg.style.display = 'none';
+          setTimeout(() => window.location.href = 'http://localhost:8080/', 1000);
+        } else {
+          let msg = data.message || 'Registration failed';
+          if (msg.includes('No user found'))
+            msg = 'No user found with this registration number.';
+          else if (msg.includes('Face already registered'))
+            msg = 'Face already registered.';
+
+          errorMsg.textContent = msg;
+          errorMsg.style.display = 'block';
+          retryBtn.style.display = 'inline-block';
+        }
+      });
+    }, 'image/jpeg');
+  };
+
+  retryBtn.onclick = () => location.reload();
+</script>
+</body>
+</html>

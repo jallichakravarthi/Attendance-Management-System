@@ -19,7 +19,7 @@ const TestRegister = () => {
     tokenInput.type = "hidden";
     tokenInput.name = "token";
     tokenInput.value =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRva2VudGVzdHVzZXIxQHRlc3QiLCJpYXQiOjE3NTQzOTA4NzIsImV4cCI6MTc1NDQyNjg3Mn0.-uj7t822MWzzOyjKmsMv6AsJkUtrmr9wtq8Swfk747U";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRva2VudGVzdHVzZXIxQHRlc3QiLCJpYXQiOjE3Njg4MjM3OTEsImV4cCI6MTc2ODg1OTc5MX0.6JmThiq_BpTN4WPrjdE-XTJ_zQKJpOISK7IQZu8_k18";
 
     form.appendChild(emailInput);
     form.appendChild(tokenInput);
