@@ -1,30 +1,29 @@
 FROM python:3.10-slim
 
-# Prevent Python from buffering logs
 ENV PYTHONUNBUFFERED=1
+ENV CMAKE_ARGS="-DDLIB_USE_CUDA=0 -DDLIB_USE_CUBLAS=0"
+ENV DLIB_NO_GUI_SUPPORT=1
+ENV MAKEFLAGS="-j1"
 
-# Install system dependencies required for dlib
 RUN apt-get update && apt-get install -y \
     cmake \
     build-essential \
     libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements first (better Docker caching)
 COPY requirements.txt .
 
-# Upgrade pip and install dependencies
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel
 
-# Copy the rest of the application
+# 🔥 CRITICAL: prevent source builds
+RUN pip install --no-cache-dir --only-binary=:all: dlib==19.24.1
+
+RUN pip install --no-cache-dir --no-build-isolation -r requirements.txt
+
 COPY . .
 
-# Expose port Render expects
 EXPOSE 10000
 
-# Start your Flask app
 CMD ["python", "app.py"]
