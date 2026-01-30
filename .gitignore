@@ -53,3 +53,5 @@ jest-test-results.json
 uploads/
 
 sample.txt
+
+testflask
